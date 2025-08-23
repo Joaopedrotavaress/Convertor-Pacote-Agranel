@@ -1,21 +1,27 @@
-from Back.Api import get_valid_token
-from Back.produto import get_produtos_por_skus  # supondo que você salvou em produto.py
-import json
+from Api import get_valid_token, init_token
+from produto import get_produtos_por_skus
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 if __name__ == "__main__":
+    # ---------- PEGAR OU GERAR TOKEN ----------
     try:
-        # Teste: pegar produtos por SKUs existentes
-        skus_teste = ["2004", "201"]  # substitua por SKUs válidos do seu Bling
-        produtos = get_produtos_por_skus(skus_teste)
+        access_token = get_valid_token()
+        print("✅ Token carregado do token.json")
+    except Exception:
+        AUTH_CODE = os.getenv("AUTH_CODE")  
+        access_token = init_token(AUTH_CODE)
+        print("✅ Novo token gerado e salvo no token.json")
 
-        if produtos:
-            print("✅ Produtos encontrados:")
-            for p in produtos:
-                print(f"- {p.get('nome')} (SKU: {p.get('codigo')} (ID: {p.get('id')}))")
+    # ---------- TESTE DE PRODUTOS ----------
+    skus_teste = ["2004", "201"]
+    produtos = get_produtos_por_skus(skus_teste, access_token)
 
-           
-        else:
-            print("⚠️ Nenhum produto encontrado para os SKUs informados.")
-
-    except Exception as e:
-        print(f"❌ Erro ao rodar teste: {e}")
+    if produtos:
+        print("✅ Produtos encontrados:")
+        for p in produtos:
+            print(f"- {p.get('nome')} (SKU: {p.get('codigo')} (ID: {p.get('id')}))")
+    else:
+        print("⚠️ Nenhum produto encontrado para os SKUs informados.")

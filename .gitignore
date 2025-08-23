@@ -1,5 +1,4 @@
-
-testeToken.json
+token.json
 .env
 
 __pycache__/
@@ -9,4 +8,3 @@ __pycache__/
 
 .DS_Store
 Back/DadosApi.env
-Back/token.json

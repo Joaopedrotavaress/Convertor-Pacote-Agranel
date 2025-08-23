@@ -5,13 +5,12 @@ import time
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv()  # carrega as variáveis do .env
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 TOKEN_FILE = "testeToken.json"
-
 
 def save_token(token_data):
     with open(TOKEN_FILE, "w") as f:
@@ -29,7 +28,6 @@ def init_token(auth_code):
     token_data["expires_at"] = time.time() + token_data["expires_in"]
     save_token(token_data)
     return token_data["access_token"]
-
 
 def get_valid_token():
     token_data = load_token()
@@ -61,6 +59,7 @@ def get_access_token(auth_code):
     }
 
     response = requests.post(url, headers=headers, data=data)
+    response.raise_for_status()
     return response.json()
 
 def refresh_access_token(refresh_token):
@@ -80,18 +79,13 @@ def refresh_access_token(refresh_token):
     }
 
     response = requests.post(url, headers=headers, data=data)
+    response.raise_for_status()
     token_data = response.json()
 
-    
     if "access_token" in token_data:
-        
         token_data["expires_at"] = time.time() + token_data["expires_in"]
-        
         save_token(token_data)
-        print("Access Token atualizado automaticamente.")
+        print("✅ Access Token atualizado automaticamente.")
         return token_data
     else:
-       
-        raise Exception(
-            "Refresh Token expirou ou é inválido. Solicite novo Auth Code ao administrador."
-        )
+        raise Exception("Refresh Token expirou ou é inválido. Gere um novo Auth Code.")
