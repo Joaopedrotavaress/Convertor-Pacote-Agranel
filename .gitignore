@@ -1,0 +1,12 @@
+
+testeToken.json
+.env
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+.DS_Store
+Back/DadosApi.env
+Back/token.json

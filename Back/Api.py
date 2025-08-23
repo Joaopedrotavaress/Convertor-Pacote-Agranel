@@ -1,12 +1,16 @@
-import requests;
-import base64;
-import json;
-import time;
+import requests
+import base64
+import json
+import time
+import os
+from dotenv import load_dotenv
 
-CLIENT_ID = '7769a0b07187acd7729185588c4e66f63528e5e0'
-CLIENT_SECRET  = '7bc9a5a38b712d21a8ff946a0288aa6955bf4b11f4b52bf3685dd5c76c1e'
-REDIRECT_URI = 'http://localhost:3000/callback'
-TOKEN_FILE = "token.json"
+load_dotenv()
+
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+REDIRECT_URI = os.getenv("REDIRECT_URI")
+TOKEN_FILE = "testeToken.json"
 
 
 def save_token(token_data):
