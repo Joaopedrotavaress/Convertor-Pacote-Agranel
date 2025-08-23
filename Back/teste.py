@@ -1,5 +1,5 @@
-from Api import get_valid_token
-from produto import get_produtos_por_skus  # supondo que você salvou em produto.py
+from Back.Api import get_valid_token
+from Back.produto import get_produtos_por_skus  # supondo que você salvou em produto.py
 import json
 
 if __name__ == "__main__":

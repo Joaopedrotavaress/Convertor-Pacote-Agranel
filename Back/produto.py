@@ -1,5 +1,5 @@
 import requests;
-from Api import init_token, get_valid_token
+from Back.Api import init_token, get_valid_token
 
 import requests
 
