@@ -1,0 +1,8 @@
+{
+  "access_token": "SEU_ACCESS_TOKEN_AQUI",
+  "expires_in": 21600,
+  "token_type": "Bearer",
+  "scope": "SEU_SCOPE_AQUI",
+  "refresh_token": "SEU_REFRESH_TOKEN_AQUI",
+  "expires_at": 0
+}
