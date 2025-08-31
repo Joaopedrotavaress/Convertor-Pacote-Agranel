@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
+TOKEN_FILE = "token.json"
 app = FastAPI(title="Conversor Pacote → Agranel")
 
 class ConversaoRequest(BaseModel):
@@ -16,22 +16,18 @@ class ConversaoRequest(BaseModel):
     deposito: str
 
 def obter_token():
-    # Tenta ler token.json localmente
     try:
         with open(TOKEN_FILE, "r") as f:
             token_data = json.load(f)
     except FileNotFoundError:
-        # Se não existir, pega da variável de ambiente
         token_data = {
             "access_token": os.getenv("ACCESS_TOKEN"),
             "refresh_token": os.getenv("REFRESH_TOKEN"),
         }
         if not token_data["access_token"] or not token_data["refresh_token"]:
             raise Exception("Tokens não encontrados nas variáveis de ambiente")
-        # Salva localmente para o próximo uso
         with open(TOKEN_FILE, "w") as f:
             json.dump(token_data, f)
-
     # Verifica se o token expirou e faz refresh se necessário
     try:
         return get_valid_token(token_data)
