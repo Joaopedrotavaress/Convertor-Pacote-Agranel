@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from Api import get_valid_token, init_token
-from produto import get_produtos_por_skus
-from estoque import movimentar_produto_agranel
+from .Api import get_valid_token, init_token
+from .produto import get_produtos_por_skus
+from .estoque import movimentar_produto_agranel
 import os
 from dotenv import load_dotenv
 
