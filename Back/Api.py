@@ -5,12 +5,12 @@ import time
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # carrega as variáveis do .env
+load_dotenv()  
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
-TOKEN_FILE = "testeToken.json"
+TOKEN_FILE = "token.json"
 
 def save_token(token_data):
     with open(TOKEN_FILE, "w") as f:
