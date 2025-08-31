@@ -5,26 +5,11 @@ from .produto import get_produtos_por_skus
 from .estoque import movimentar_produto_agranel
 import os
 from dotenv import load_dotenv
-from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
-TOKEN_FILE = "token.json"
 
 app = FastAPI(title="Conversor Pacote → Agranel")
 
-# ----------------- CORS -----------------
-origins = [
-    "http://localhost:3000",  # front local
-    "https://seu-site-no-vercel-ou-dominio.com"  # front deployado futuramente
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 class ConversaoRequest(BaseModel):
     skuEmbalado: str
     skuAgranel: str
@@ -83,3 +68,4 @@ def conversao(request: ConversaoRequest):
         return {"error": f"Erro ao movimentar produtos: {str(e)}"}
 
     return {"mensagem": "Conversão realizada com sucesso!"}
+
