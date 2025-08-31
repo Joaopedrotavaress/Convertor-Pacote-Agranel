@@ -16,16 +16,33 @@ class ConversaoRequest(BaseModel):
     deposito: str
 
 def obter_token():
-    """
-    Garante que sempre teremos um token válido
-    """
+    # Tenta ler token.json localmente
     try:
-        return get_valid_token() 
+        with open(TOKEN_FILE, "r") as f:
+            token_data = json.load(f)
+    except FileNotFoundError:
+        # Se não existir, pega da variável de ambiente
+        token_data = {
+            "access_token": os.getenv("ACCESS_TOKEN"),
+            "refresh_token": os.getenv("REFRESH_TOKEN"),
+        }
+        if not token_data["access_token"] or not token_data["refresh_token"]:
+            raise Exception("Tokens não encontrados nas variáveis de ambiente")
+        # Salva localmente para o próximo uso
+        with open(TOKEN_FILE, "w") as f:
+            json.dump(token_data, f)
+
+    # Verifica se o token expirou e faz refresh se necessário
+    try:
+        return get_valid_token(token_data)
     except Exception:
-        AUTH_CODE = os.getenv("AUTH_CODE")
-        if not AUTH_CODE:
-            raise Exception("AUTH_CODE não definido nas variáveis de ambiente")
-        return init_token(AUTH_CODE)  
+        refresh_token = token_data.get("refresh_token")
+        if not refresh_token:
+            raise Exception("Refresh token não disponível")
+        new_token_data = refresh_access_token(refresh_token)  # função do seu Api.py
+        with open(TOKEN_FILE, "w") as f:
+            json.dump(new_token_data, f)
+        return new_token_data["access_token"]
 
 @app.post("/conversao")
 def conversao(request: ConversaoRequest):

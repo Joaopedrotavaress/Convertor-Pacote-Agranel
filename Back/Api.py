@@ -5,11 +5,13 @@ import time
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  
+load_dotenv()
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
+
+# Aqui usamos variável de ambiente para inicializar o token
 TOKEN_FILE = "token.json"
 
 def save_token(token_data):
@@ -17,10 +19,17 @@ def save_token(token_data):
         json.dump(token_data, f)
 
 def load_token():
+    # Se já existe no container, lê do arquivo temporário
     try:
         with open(TOKEN_FILE, "r") as f:
             return json.load(f)
     except FileNotFoundError:
+        # Se não existe, tenta ler da variável de ambiente
+        token_env = os.getenv("TOKEN_JSON")
+        if token_env:
+            token_data = json.loads(token_env)
+            save_token(token_data)  # cria arquivo temporário
+            return token_data
         return None
 
 def init_token(auth_code):
@@ -32,7 +41,7 @@ def init_token(auth_code):
 def get_valid_token():
     token_data = load_token()
     if not token_data:
-        raise Exception("Nenhum token encontrado. Inicialize com Auth Code.")
+        raise Exception("Nenhum token encontrado. Inicialize com Auth Code ou defina TOKEN_JSON.")
 
     if time.time() > token_data["expires_at"]:
         token_data = refresh_access_token(token_data["refresh_token"])
