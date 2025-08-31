@@ -13,15 +13,17 @@ TOKEN_FILE = "token.json"
 
 app = FastAPI(title="Conversor Pacote → Agranel")
 
-# ----------------- CORS -----------------
-origins = [
-    "http://localhost:3000",
-    "https://seu-site-no-vercel-ou-dominio.com"  # substitua pelo seu deploy
-]
+# ----------------- CORS Dinâmico -----------------
+ENV = os.getenv("ENV", "dev")  # 'dev' ou 'prod'
+
+if ENV == "dev":
+    ORIGINS = ["http://localhost:3000"]
+else:
+    ORIGINS = ["https://seu-site-no-vercel-ou-dominio.com"]  # front deployado
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
