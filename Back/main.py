@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
-
+TOKEN_FILE = "token.json"
 
 app = FastAPI(title="Conversor Pacote → Agranel")
 

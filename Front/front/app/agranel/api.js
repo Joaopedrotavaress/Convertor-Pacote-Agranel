@@ -11,7 +11,14 @@ export async function converterProduto({ skuEmbalado, skuAgranel, deposito }) {
 
     const data = await res.json();
 
-    if (!res.ok) throw new Error(data.error || "Erro desconhecido");
+    if (data.error) {
+      return { success: false, error: data.error };
+    }
+
+    if (!data.mensagem) {
+      return { success: false, error: "Resposta inesperada da API" };
+    }
+
     return { success: true, mensagem: data.mensagem };
   } catch (err) {
     return { success: false, error: err.message };
