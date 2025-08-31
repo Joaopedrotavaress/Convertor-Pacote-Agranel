@@ -8,22 +8,36 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI()
+app = FastAPI(title="Conversor Pacote → Agranel")
 
 class ConversaoRequest(BaseModel):
     skuEmbalado: str
     skuAgranel: str
     deposito: str
 
+def obter_token():
+    """
+    Garante que sempre teremos um token válido
+    """
+    try:
+        return get_valid_token() 
+    except Exception:
+        AUTH_CODE = os.getenv("AUTH_CODE")
+        if not AUTH_CODE:
+            raise Exception("AUTH_CODE não definido nas variáveis de ambiente")
+        return init_token(AUTH_CODE)  
+
 @app.post("/conversao")
 def conversao(request: ConversaoRequest):
     try:
-        access_token = get_valid_token()
-    except:
-        AUTH_CODE = os.getenv("AUTH_CODE")
-        access_token = init_token(AUTH_CODE)
+        access_token = obter_token()
+    except Exception as e:
+        return {"error": f"Erro ao obter token: {str(e)}"}
 
-    produtos = get_produtos_por_skus([request.skuEmbalado, request.skuAgranel], access_token)
+    try:
+        produtos = get_produtos_por_skus([request.skuEmbalado, request.skuAgranel], access_token)
+    except Exception as e:
+        return {"error": f"Erro ao buscar produtos: {str(e)}"}
 
     produto_embalado = next((p for p in produtos if p["codigo"] == request.skuEmbalado), None)
     produto_agranel = next((p for p in produtos if p["codigo"] == request.skuAgranel), None)
@@ -31,5 +45,9 @@ def conversao(request: ConversaoRequest):
     if not produto_embalado or not produto_agranel:
         return {"error": "Produtos não encontrados"}
 
-    movimentar_produto_agranel(produto_embalado, produto_agranel, request.deposito, access_token)
+    try:
+        movimentar_produto_agranel(produto_embalado, produto_agranel, request.deposito, access_token)
+    except Exception as e:
+        return {"error": f"Erro ao movimentar produtos: {str(e)}"}
+
     return {"mensagem": "Conversão realizada com sucesso!"}
