@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { FaBox, FaExchangeAlt, FaCheckCircle } from "react-icons/fa";
 import Image from "next/image";
-
-const Conversor: React.FC = () => {
+import { converterProduto } from "./api"; 
+const Agranel: React.FC = () => {
   const [skuEmbalado, setSkuEmbalado] = useState("");
   const [skuAgranel, setSkuAgranel] = useState("");
   const [deposito, setDeposito] = useState("Matriz");
@@ -16,26 +16,16 @@ const Conversor: React.FC = () => {
     setLoading(true);
     setResultado(null);
 
-    try {
-      const res = await fetch("/api/conversao", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skuEmbalado, skuAgranel, deposito }),
-      });
+    const response = await converterProduto({ skuEmbalado, skuAgranel, deposito });
 
-      const data = await res.json();
-      if (res.ok) setResultado(`Conversão realizada: ${data.mensagem}`);
-      else setResultado(`Erro: ${data.error}`);
-    } catch {
-      setResultado("Erro ao conectar com o servidor.");
-    } finally {
-      setLoading(false);
-    }
+    if (response.success) setResultado(`Conversão realizada: ${response.mensagem}`);
+    else setResultado(`Erro: ${response.error}`);
+
+    setLoading(false);
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 font-sans text-gray-800">
-
       <header className="bg-[#8CC63F] text-white py-2 shadow-md">
         <div className="container mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -49,7 +39,6 @@ const Conversor: React.FC = () => {
             />
             <h1 className="text-xl font-bold">Conversor de Produtos</h1>
           </div>
-
           <p className="text-xs text-white/90 hidden sm:block">
             Converta embalados em granel facilmente
           </p>
@@ -123,7 +112,6 @@ const Conversor: React.FC = () => {
         </section>
       </main>
 
-
       <footer className="bg-[#6E2E1F] text-white py-4 text-center">
         Desenvolvido para integração com Bling API | <span className="font-bold">Lord Pets</span>
       </footer>
@@ -131,4 +119,4 @@ const Conversor: React.FC = () => {
   );
 };
 
-export default Conversor;
+export default Agranel;
