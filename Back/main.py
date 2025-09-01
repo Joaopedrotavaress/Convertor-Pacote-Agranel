@@ -1,10 +1,6 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware  # 🔹 ADICIONADO
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-# Supondo que estes imports venham de arquivos locais na sua estrutura de projeto
-# from .Api import get_valid_token, refresh_access_token
-# from .produto import get_produtos_por_skus
-# from .estoque import movimentar_produto_agranel
 import os
 import json
 from dotenv import load_dotenv
@@ -16,9 +12,9 @@ TOKEN_FILE = "token.json"
 
 app = FastAPI(title="Conversor Pacote → Agranel")
 
-# 🔹 ADICIONADO: Configuração de CORS
+# 🔹 Configuração de CORS
 origins = [
-    "http://localhost:3000",              # Front em dev
+    "http://localhost:3000",               # Front em dev
     "https://seu-front-no-vercel.vercel.app"  # Front em produção no Vercel
 ]
 
@@ -33,15 +29,13 @@ app.add_middleware(
 # Modelo de dados para a requisição
 class ConversaoRequest(BaseModel):
     skuEmbalado: str
-    quantidade: int # Adicionado para especificar a quantidade a ser convertida
+    quantidade: int   # 🔹 Obrigatório
     skuAgranel: str
     deposito: str
 
 def obter_token():
     """
     Obtém um token de acesso válido.
-    Lê o token de um arquivo, ou das variáveis de ambiente se o arquivo não existir.
-    Atualiza o token se ele estiver expirado.
     """
     try:
         with open(TOKEN_FILE, "r") as f:
@@ -58,29 +52,8 @@ def obter_token():
         with open(TOKEN_FILE, "w") as f:
             json.dump(token_data, f)
 
-    # Verifica se o token expirou e faz refresh se necessário
-    try:
-        # Aqui você teria uma função que valida o token, por exemplo, verificando a data de expiração
-        # Para este exemplo, vamos simular que get_valid_token lança uma exceção se inválido
-        # return get_valid_token(token_data) 
-        return token_data["access_token"] # Retorno simplificado
-    except Exception:
-        refresh_token = token_data.get("refresh_token")
-        if not refresh_token:
-            raise Exception("Refresh token não disponível")
-        
-        # new_token_data = refresh_access_token(refresh_token)
-        # Comentei a linha acima porque a função não foi fornecida
-        # Simulando uma resposta de novos tokens
-        new_token_data = {
-            "access_token": "new_access_token_from_refresh",
-            "refresh_token": "new_refresh_token_optional"
-        }
-
-        with open(TOKEN_FILE, "w") as f:
-            json.dump(new_token_data, f)
-        
-        return new_token_data["access_token"]
+    # 🔹 Simulação de validação (aqui poderia entrar sua função real `get_valid_token`)
+    return token_data["access_token"]
 
 @app.post("/conversao")
 def conversao(request: ConversaoRequest):
@@ -93,9 +66,7 @@ def conversao(request: ConversaoRequest):
         return {"error": f"Erro ao obter token: {str(e)}"}
 
     try:
-        # produtos = get_produtos_por_skus([request.skuEmbalado, request.skuAgranel], access_token)
-        # Comentei a linha acima porque a função não foi fornecida
-        # Simulando uma resposta da busca de produtos
+        # 🔹 Aqui seria chamada real da API Bling
         produtos = [
             {"codigo": request.skuEmbalado, "nome": "Produto Embalado Exemplo"},
             {"codigo": request.skuAgranel, "nome": "Produto Agranel Exemplo"},
@@ -110,9 +81,12 @@ def conversao(request: ConversaoRequest):
         return {"error": "Produtos não encontrados"}
 
     try:
-        # movimentar_produto_agranel(produto_embalado, produto_agranel, request.deposito, access_token)
-        # Comentei a linha acima porque a função não foi fornecida
-        print(f"Movimentando {request.quantidade} de {produto_embalado['nome']} para {produto_agranel['nome']} no depósito {request.deposito}")
+        # 🔹 Aqui entraria a lógica de movimentação real
+        print(
+            f"Movimentando {request.quantidade} de "
+            f"{produto_embalado['nome']} → {produto_agranel['nome']} "
+            f"no depósito {request.deposito} com token {access_token}"
+        )
     except Exception as e:
         return {"error": f"Erro ao movimentar produtos: {str(e)}"}
 
