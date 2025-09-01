@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware  # 🔹 ADICIONADO
 from pydantic import BaseModel
 # Supondo que estes imports venham de arquivos locais na sua estrutura de projeto
 # from .Api import get_valid_token, refresh_access_token
@@ -14,6 +15,20 @@ load_dotenv()
 TOKEN_FILE = "token.json"
 
 app = FastAPI(title="Conversor Pacote → Agranel")
+
+# 🔹 ADICIONADO: Configuração de CORS
+origins = [
+    "http://localhost:3000",              # Front em dev
+    "https://seu-front-no-vercel.vercel.app"  # Front em produção no Vercel
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Modelo de dados para a requisição
 class ConversaoRequest(BaseModel):
