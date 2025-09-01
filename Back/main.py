@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 # Importações do projeto
 from Back.produto import get_produtos_por_skus
 from Back.estoque import movimentar_produto_agranel
-from Back.Api import get_valid_token
+from Back.Api import get_valid_token, init_token
 
 
 # Carrega as variáveis de ambiente do arquivo .env
@@ -41,12 +41,15 @@ class ConversaoRequest(BaseModel):
 
 def obter_token():
     """
-    Obtém um token de acesso válido.
+    Obtém um token de acesso válido, gerando um novo se necessário.
     """
     try:
         return get_valid_token()
-    except Exception as e:
-        raise Exception(f"Erro ao obter token: {str(e)}")
+    except Exception:
+        AUTH_CODE = os.getenv("AUTH_CODE")
+        if not AUTH_CODE:
+            raise Exception("Nenhum token válido e AUTH_CODE não configurado.")
+        return init_token(AUTH_CODE)
 
 @app.post("/conversao")
 def conversao(request: ConversaoRequest):
