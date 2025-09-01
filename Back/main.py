@@ -14,7 +14,7 @@ from Back.Api import get_valid_token
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
 
-TOKEN_FILE = "token.json"
+TOKEN_FILE = "/etc/secrets/token.json"
 
 app = FastAPI(title="Conversor Pacote → Agranel")
 
