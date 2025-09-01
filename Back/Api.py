@@ -84,15 +84,16 @@ def refresh_access_token(refresh_token: str) -> dict:
     return token_data
 
 def get_valid_token() -> str:
-    """
-    Retorna um access_token válido (renova automaticamente se expirado).
-    """
     token_data = load_token()
     if not token_data:
         raise Exception("Nenhum token encontrado. Rode init_token(auth_code) primeiro.")
 
     if time.time() > token_data.get("expires_at", 0):
-        print("⚠️ Token expirado, renovando...")
-        token_data = refresh_access_token(token_data["refresh_token"])
+        print("⚠️ Token expirado, tentando renovar...")
+        try:
+            token_data = refresh_access_token(token_data["refresh_token"])
+        except Exception as e:
+            raise Exception("❌ Refresh token inválido ou expirado. "
+                            "Gere um novo authorization_code no Bling e rode init_token(auth_code).") from e
 
     return token_data["access_token"]
