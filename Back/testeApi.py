@@ -9,5 +9,9 @@ data = {
 }
 
 response = requests.post(url, json=data)
-print(response.status_code)
-print(response.json())
+
+print("Status:", response.status_code)
+try:
+    print("Resposta JSON:", response.json())
+except Exception:
+    print("Resposta bruta:", response.text)
