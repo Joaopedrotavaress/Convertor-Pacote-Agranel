@@ -1,96 +1,76 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-# Mantenha seus imports reais
-from .Api import get_valid_token, refresh_access_token
+# Importando o módulo Api inteiro para clareza
+from . import Api 
 from .produto import get_produtos_por_skus
 from .estoque import movimentar_produto_agranel
-import os
-import json
-from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-
-load_dotenv()
-TOKEN_FILE = "token.json"
 
 app = FastAPI(title="Conversor Pacote → Agranel")
 
 # ----------------- CORS -----------------
+# (Seu código CORS permanece o mesmo)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://seu-site-no-vercel-ou-dominio.com"
-    ],
+    allow_origins=["http://localhost:3000", "https://seu-site-no-vercel-ou-dominio.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ----------------- Pydantic (MODELO CORRIGIDO) -----------------
+# ----------------- Pydantic -----------------
 class ConversaoRequest(BaseModel):
     skuEmbalado: str
-    quantidade: int  # <-- ADICIONADO PARA CORRESPONDER AO FRONTEND
+    quantidade: int
     skuAgranel: str
     deposito: str
 
-# ----------------- Função Token -----------------
+# ----------------- Função Token (SIMPLIFICADA) -----------------
 def obter_token():
+    """
+    Delega toda a lógica de obtenção e renovação de token para o módulo Api.
+    """
     try:
-        with open(TOKEN_FILE, "r") as f:
-            token_data = json.load(f)
-    except FileNotFoundError:
-        token_data = {
-            "access_token": os.getenv("ACCESS_TOKEN"),
-            "refresh_token": os.getenv("REFRESH_TOKEN"),
-        }
-        if not token_data["access_token"] or not token_data["refresh_token"]:
-            raise Exception("Tokens não encontrados nas variáveis de ambiente")
-        with open(TOKEN_FILE, "w") as f:
-            json.dump(token_data, f)
-
-    try:
-        return get_valid_token(token_data)
-    except Exception:
-        refresh_token = token_data.get("refresh_token")
-        if not refresh_token:
-            raise Exception("Refresh token não disponível")
-        new_token_data = refresh_access_token(refresh_token)
-        with open(TOKEN_FILE, "w") as f:
-            json.dump(new_token_data, f)
-        return new_token_data["access_token"]
+        # A única chamada necessária. O Api.py cuida do resto.
+        return Api.get_valid_token()
+    except Exception as e:
+        # Usando HTTPException para retornar um erro HTTP adequado.
+        # Isso dá mais informações ao frontend sobre o que aconteceu.
+        raise HTTPException(
+            status_code=503, # 503 Service Unavailable é ideal para falhas com serviços externos.
+            detail=f"Erro de autenticação com a API externa: {e}"
+        )
 
 # ----------------- Endpoint -----------------
 @app.post("/conversao")
 def conversao(request: ConversaoRequest):
-    try:
-        access_token = obter_token()
-    except Exception as e:
-        # É uma boa prática usar HTTPException para erros
-        # from fastapi import HTTPException
-        # raise HTTPException(status_code=500, detail=f"Erro ao obter token: {str(e)}")
-        return {"error": f"Erro ao obter token: {str(e)}"}
+    # A obtenção do token agora é limpa e segura.
+    access_token = obter_token()
 
     try:
-        produtos = get_produtos_por_skus([request.skuEmbalado, request.skuAgranel], access_token)
+        produtos = get_produtos_por_skus(
+            [request.skuEmbalado, request.skuAgranel], 
+            access_token
+        )
     except Exception as e:
-        return {"error": f"Erro ao buscar produtos: {str(e)}"}
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar produtos: {str(e)}")
 
-    produto_embalado = next((p for p in produtos if p["codigo"] == request.skuEmbalado), None)
-    produto_agranel = next((p for p in produtos if p["codigo"] == request.skuAgranel), None)
+    produto_embalado = next((p for p in produtos if p.get("codigo") == request.skuEmbalado), None)
+    produto_agranel = next((p for p in produtos if p.get("codigo") == request.skuAgranel), None)
 
     if not produto_embalado or not produto_agranel:
-        return {"error": "Produtos não encontrados"}
+        raise HTTPException(status_code=404, detail="Um ou mais SKUs não foram encontrados.")
 
     try:
-        # Agora você pode usar a quantidade que veio na requisição
         movimentar_produto_agranel(
             produto_embalado,
             produto_agranel,
-            request.quantidade, # <-- PASSANDO A QUANTIDADE
+            request.quantidade,
             request.deposito,
             access_token
         )
     except Exception as e:
-        return {"error": f"Erro ao movimentar produtos: {str(e)}"}
+        raise HTTPException(status_code=500, detail=f"Erro ao movimentar produtos: {str(e)}")
 
     return {"mensagem": "Conversão realizada com sucesso!"}
+
