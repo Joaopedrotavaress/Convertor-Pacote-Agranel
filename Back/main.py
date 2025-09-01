@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from .Api import get_valid_token, init_token, refresh_access_token
+# Mantenha seus imports reais
+from .Api import get_valid_token, refresh_access_token
 from .produto import get_produtos_por_skus
 from .estoque import movimentar_produto_agranel
 import os
@@ -20,14 +21,15 @@ app.add_middleware(
         "http://localhost:3000",
         "https://seu-site-no-vercel-ou-dominio.com"
     ],
-    allow_credentials=True,  # importante se seu front enviar cookies ou headers
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ----------------- Pydantic -----------------
+# ----------------- Pydantic (MODELO CORRIGIDO) -----------------
 class ConversaoRequest(BaseModel):
     skuEmbalado: str
+    quantidade: int  # <-- ADICIONADO PARA CORRESPONDER AO FRONTEND
     skuAgranel: str
     deposito: str
 
@@ -46,7 +48,6 @@ def obter_token():
         with open(TOKEN_FILE, "w") as f:
             json.dump(token_data, f)
 
-    # Verifica se o token expirou
     try:
         return get_valid_token(token_data)
     except Exception:
@@ -64,6 +65,9 @@ def conversao(request: ConversaoRequest):
     try:
         access_token = obter_token()
     except Exception as e:
+        # É uma boa prática usar HTTPException para erros
+        # from fastapi import HTTPException
+        # raise HTTPException(status_code=500, detail=f"Erro ao obter token: {str(e)}")
         return {"error": f"Erro ao obter token: {str(e)}"}
 
     try:
@@ -78,7 +82,14 @@ def conversao(request: ConversaoRequest):
         return {"error": "Produtos não encontrados"}
 
     try:
-        movimentar_produto_agranel(produto_embalado, produto_agranel, request.deposito, access_token)
+        # Agora você pode usar a quantidade que veio na requisição
+        movimentar_produto_agranel(
+            produto_embalado,
+            produto_agranel,
+            request.quantidade, # <-- PASSANDO A QUANTIDADE
+            request.deposito,
+            access_token
+        )
     except Exception as e:
         return {"error": f"Erro ao movimentar produtos: {str(e)}"}
 
