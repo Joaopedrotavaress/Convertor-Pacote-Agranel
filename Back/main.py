@@ -1,27 +1,28 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+import sys  # Importado para depuração
 # Importando o módulo Api inteiro para clareza
 from . import Api 
 from .produto import get_produtos_por_skus
 from .estoque import movimentar_produto_agranel
 from fastapi.middleware.cors import CORSMiddleware
 
+# --- Depuração de Inicialização ---
+# Esta mensagem aparecerá nos logs do Render se o arquivo for lido.
+print("✅ Arquivo main.py iniciado com sucesso.", file=sys.stderr)
+
 app = FastAPI(title="Conversor Pacote → Agranel")
 
 # ----------------- CORS -----------------
-origins = [
-    "http://localhost:3000",  # Endereço comum para desenvolvimento com React, Vue, etc.
-    "http://127.0.0.1:3000", # Outro endereço comum para desenvolvimento local.
-    "https://seu-frontend-no-vercel.com", # IMPORTANTE: Substitua pela URL do seu site em produção.
-    # Adicione aqui outras URLs que precisam de acesso.
-]
+
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,       # Permite o envio de cookies/autenticação.
-    allow_methods=["*"],          # Permite todos os métodos (GET, POST, PUT, etc.).
-    allow_headers=["*"],          # Permite todos os cabeçalhos nas requisições.
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ----------------- Pydantic -----------------
@@ -31,25 +32,36 @@ class ConversaoRequest(BaseModel):
     skuAgranel: str
     deposito: str
 
+# ----------------- Endpoint de Verificação de Saúde -----------------
+@app.get("/health")
+def health_check():
+    """
+    Um endpoint simples para verificar se a API está no ar e respondendo,
+    sem precisar de autenticação.
+    """
+    return {"status": "ok"}
+
 # ----------------- Função Token (SIMPLIFICADA) -----------------
 def obter_token():
     """
     Delega toda a lógica de obtenção e renovação de token para o módulo Api.
     """
     try:
-        # A única chamada necessária. O Api.py cuida do resto.
-        return Api.get_valid_token()
+        print("➡️  Tentando obter o token da API externa...", file=sys.stderr)
+        token = Api.get_valid_token()
+        print("✅ Token obtido com sucesso.", file=sys.stderr)
+        return token
     except Exception as e:
-
+        print(f"❌ ERRO CRÍTICO ao obter token: {e}", file=sys.stderr)
         raise HTTPException(
-            status_code=503, # 503 Service Unavailable é ideal para falhas com serviços externos.
+            status_code=503,
             detail=f"Erro de autenticação com a API externa: {e}"
         )
 
-# ----------------- Endpoint -----------------
+# ----------------- Endpoint Principal -----------------
 @app.post("/conversao")
 def conversao(request: ConversaoRequest):
-    # A obtenção do token agora é limpa e segura.
+    print("➡️  Requisição recebida em /conversao.", file=sys.stderr)
     access_token = obter_token()
 
     try:
@@ -78,3 +90,4 @@ def conversao(request: ConversaoRequest):
         raise HTTPException(status_code=500, detail=f"Erro ao movimentar produtos: {str(e)}")
 
     return {"mensagem": "Conversão realizada com sucesso!"}
+
