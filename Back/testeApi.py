@@ -1,6 +1,6 @@
 import requests
 
-url = "https://convertor-pacote-agranel.onrender.com/conversao"
+url = "https://convertor-pacote-agranel.fly.dev/conversao"
 
 # Dados da requisição, AGORA INCLUINDO o campo "quantidade"
 data = {

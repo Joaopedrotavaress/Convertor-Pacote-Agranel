@@ -6,10 +6,9 @@ import json
 from dotenv import load_dotenv
 
 # Importações do projeto
-from .produto import get_produtos_por_skus
-from .estoque import movimentar_produto_agranel
-from .Api import get_valid_token, init_token
-
+from produto import get_produtos_por_skus
+from estoque import movimentar_produto_agranel
+from Api import get_valid_token, init_token
 
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
