@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { FaBox, FaExchangeAlt, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import {
+  FaBox,
+  FaExchangeAlt,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 import Image from "next/image";
 import { converterProduto, buscarProduto } from "./api";
 
-// Tipagem para o produto retornado pela API
 interface Produto {
   id?: string;
   codigo: string;
@@ -23,24 +28,7 @@ const Agranel: React.FC = () => {
   const [produtoEmbaladoInfo, setProdutoEmbaladoInfo] = useState<Produto | null>(null);
   const [produtoAgranelInfo, setProdutoAgranelInfo] = useState<Produto | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setResultado(null);
-
-    const response = await converterProduto({
-      skuEmbalado,
-      skuAgranel,
-      deposito,
-      quantidade: 1,
-    });
-
-    if (response.success)
-      setResultado({ success: true, mensagem: `Conversão realizada: ${response.mensagem}` });
-    else setResultado({ success: false, mensagem: `Erro: ${response.error}` });
-
-    setLoading(false);
-  };
+  const [showConfirmBox, setShowConfirmBox] = useState(false);
 
   const handleBlurEmbalado = async () => {
     if (skuEmbalado) {
@@ -56,6 +44,36 @@ const Agranel: React.FC = () => {
       if (response.success) setProdutoAgranelInfo(response.produtos[0]);
       else setProdutoAgranelInfo(null);
     }
+  };
+
+  const handlePreSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (produtoEmbaladoInfo && produtoAgranelInfo) {
+      setShowConfirmBox(true);
+    } else {
+      setResultado({ success: false, mensagem: "Preencha os produtos antes de converter." });
+    }
+  };
+
+  const handleConfirmSubmit = async () => {
+    setLoading(true);
+    setResultado(null);
+
+    const response = await converterProduto({
+      skuEmbalado,
+      skuAgranel,
+      deposito,
+      quantidade: 1,
+    });
+
+    if (response.success) {
+      setResultado({ success: true, mensagem: `Conversão realizada: ${response.mensagem}` });
+    } else {
+      setResultado({ success: false, mensagem: `Erro: ${response.error}` });
+    }
+
+    setShowConfirmBox(false);
+    setLoading(false);
   };
 
   return (
@@ -87,7 +105,7 @@ const Agranel: React.FC = () => {
             <FaExchangeAlt /> Realizar Conversão
           </h2>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handlePreSubmit}>
             {/* Produto Embalado */}
             <div>
               <label
@@ -96,24 +114,27 @@ const Agranel: React.FC = () => {
               >
                 <FaBox className="text-[#6E2E1F]" /> Produto Embalado
               </label>
-              <div className="relative">
-                <FaBox className="absolute left-3 top-3 text-gray-400" />
-                <input
-                  id="sku_embalado"
-                  type="text"
-                  placeholder="Ex: 2004"
-                  value={skuEmbalado}
-                  onChange={(e) => setSkuEmbalado(e.target.value)}
-                  onBlur={handleBlurEmbalado}
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8CC63F] shadow-sm"
-                />
-              </div>
+              <input
+                id="sku_embalado"
+                type="text"
+                placeholder="Ex: 2004"
+                value={skuEmbalado}
+                onChange={(e) => setSkuEmbalado(e.target.value)}
+                onBlur={handleBlurEmbalado}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8CC63F] shadow-sm"
+              />
               {produtoEmbaladoInfo && (
                 <div className="mt-3 bg-gray-100 border border-[#8CC63F]/40 p-3 rounded-lg shadow-sm text-sm text-gray-700">
-                  <p><strong>Nome:</strong> {produtoEmbaladoInfo.nome}</p>
-                  <p><strong>Código:</strong> {produtoEmbaladoInfo.codigo}</p>
+                  <p>
+                    <strong>Nome:</strong> {produtoEmbaladoInfo.nome}
+                  </p>
+                  <p>
+                    <strong>Código:</strong> {produtoEmbaladoInfo.codigo}
+                  </p>
                   {produtoEmbaladoInfo.pesoLiquido && (
-                    <p><strong>Peso líquido:</strong> {produtoEmbaladoInfo.pesoLiquido} kg</p>
+                    <p>
+                      <strong>Peso líquido:</strong> {produtoEmbaladoInfo.pesoLiquido} kg
+                    </p>
                   )}
                 </div>
               )}
@@ -127,24 +148,27 @@ const Agranel: React.FC = () => {
               >
                 <FaBox className="text-[#6E2E1F]" /> Produto a Granel
               </label>
-              <div className="relative">
-                <FaBox className="absolute left-3 top-3 text-gray-400" />
-                <input
-                  id="sku_agranel"
-                  type="text"
-                  placeholder="Ex: 203"
-                  value={skuAgranel}
-                  onChange={(e) => setSkuAgranel(e.target.value)}
-                  onBlur={handleBlurAgranel}
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8CC63F] shadow-sm"
-                />
-              </div>
+              <input
+                id="sku_agranel"
+                type="text"
+                placeholder="Ex: 203"
+                value={skuAgranel}
+                onChange={(e) => setSkuAgranel(e.target.value)}
+                onBlur={handleBlurAgranel}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8CC63F] shadow-sm"
+              />
               {produtoAgranelInfo && (
                 <div className="mt-3 bg-gray-100 border border-[#6E2E1F]/40 p-3 rounded-lg shadow-sm text-sm text-gray-700">
-                  <p><strong>Nome:</strong> {produtoAgranelInfo.nome}</p>
-                  <p><strong>Código:</strong> {produtoAgranelInfo.codigo}</p>
+                  <p>
+                    <strong>Nome:</strong> {produtoAgranelInfo.nome}
+                  </p>
+                  <p>
+                    <strong>Código:</strong> {produtoAgranelInfo.codigo}
+                  </p>
                   {produtoAgranelInfo.pesoLiquido && (
-                    <p><strong>Peso líquido:</strong> {produtoAgranelInfo.pesoLiquido} kg</p>
+                    <p>
+                      <strong>Peso líquido:</strong> {produtoAgranelInfo.pesoLiquido} kg
+                    </p>
                   )}
                 </div>
               )}
@@ -174,17 +198,51 @@ const Agranel: React.FC = () => {
               className="w-full bg-[#6E2E1F] text-white py-2 rounded-lg font-semibold hover:bg-[#541F16] transition"
               disabled={loading}
             >
-              {loading ? "Convertendo..." : "Converter Produto"}
+              {loading ? "Processando..." : "Converter Produto"}
             </button>
           </form>
+
+          {/* CONFIRM BOX */}
+          {showConfirmBox && (
+            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-300 rounded-lg shadow-md text-gray-800">
+              <div className="flex items-center gap-2 text-yellow-700 font-semibold mb-3">
+                <FaExclamationTriangle /> Confirme os dados antes de continuar:
+              </div>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <strong>Produto Embalado:</strong> {produtoEmbaladoInfo?.nome} (
+                  {produtoEmbaladoInfo?.codigo})
+                </li>
+                <li>
+                  <strong>Produto a Granel:</strong> {produtoAgranelInfo?.nome} (
+                  {produtoAgranelInfo?.codigo})
+                </li>
+                <li>
+                  <strong>Depósito:</strong> {deposito}
+                </li>
+              </ul>
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  onClick={() => setShowConfirmBox(false)}
+                  className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmSubmit}
+                  className="px-4 py-2 rounded-lg bg-[#6E2E1F] text-white hover:bg-[#541F16] transition"
+                >
+                  Confirmar Conversão
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Resultado */}
           {resultado && (
             <div
               className={`mt-6 p-4 rounded-lg text-center flex items-center justify-center gap-2 font-medium ${
-                resultado.success
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
+                resultado.success ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
               }`}
             >
               {resultado.success ? <FaCheckCircle /> : <FaTimesCircle />} {resultado.mensagem}
@@ -195,8 +253,7 @@ const Agranel: React.FC = () => {
 
       {/* FOOTER */}
       <footer className="bg-[#6E2E1F] text-white py-4 text-center text-sm">
-        Desenvolvido para integração com Bling API |{" "}
-        <span className="font-bold">Lord Pets</span>
+        Desenvolvido para integração com Bling API | <span className="font-bold">Lord Pets</span>
       </footer>
     </div>
   );
