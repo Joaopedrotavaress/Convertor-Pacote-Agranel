@@ -3,7 +3,16 @@
 import { useState } from "react";
 import { FaBox, FaExchangeAlt, FaCheckCircle } from "react-icons/fa";
 import Image from "next/image";
-import { converterProduto } from "./api"; 
+import { converterProduto, buscarProduto } from "./api";
+
+// Tipagem para o produto retornado pela API
+interface Produto {
+  id?: string;
+  codigo: string;
+  nome: string;
+  pesoLiquido?: number;
+}
+
 const Agranel: React.FC = () => {
   const [skuEmbalado, setSkuEmbalado] = useState("");
   const [skuAgranel, setSkuAgranel] = useState("");
@@ -11,17 +20,42 @@ const Agranel: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState<string | null>(null);
 
+  const [produtoEmbaladoInfo, setProdutoEmbaladoInfo] = useState<Produto | null>(null);
+  const [produtoAgranelInfo, setProdutoAgranelInfo] = useState<Produto | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setResultado(null);
 
-const response = await converterProduto({ skuEmbalado, skuAgranel, deposito, quantidade: 1 });
+    const response = await converterProduto({
+      skuEmbalado,
+      skuAgranel,
+      deposito,
+      quantidade: 1,
+    });
 
-    if (response.success) setResultado(`Conversão realizada: ${response.mensagem}`);
+    if (response.success)
+      setResultado(`Conversão realizada: ${response.mensagem}`);
     else setResultado(`Erro: ${response.error}`);
 
     setLoading(false);
+  };
+
+  const handleBlurEmbalado = async () => {
+    if (skuEmbalado) {
+      const response = await buscarProduto(skuEmbalado);
+      if (response.success) setProdutoEmbaladoInfo(response.produtos[0]);
+      else setProdutoEmbaladoInfo(null);
+    }
+  };
+
+  const handleBlurAgranel = async () => {
+    if (skuAgranel) {
+      const response = await buscarProduto(skuAgranel);
+      if (response.success) setProdutoAgranelInfo(response.produtos[0]);
+      else setProdutoAgranelInfo(null);
+    }
   };
 
   return (
@@ -52,8 +86,12 @@ const response = await converterProduto({ skuEmbalado, skuAgranel, deposito, qua
           </h2>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
+            {/* Produto Embalado */}
             <div>
-              <label htmlFor="sku_embalado" className="block text-gray-700 mb-1 flex items-center gap-1">
+              <label
+                htmlFor="sku_embalado"
+                className="block text-gray-700 mb-1 flex items-center gap-1"
+              >
                 <FaBox className="text-[#6E2E1F]" /> Produto Embalado
               </label>
               <input
@@ -62,12 +100,26 @@ const response = await converterProduto({ skuEmbalado, skuAgranel, deposito, qua
                 placeholder="Ex: 2004"
                 value={skuEmbalado}
                 onChange={(e) => setSkuEmbalado(e.target.value)}
+                onBlur={handleBlurEmbalado}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8CC63F]"
               />
+              {produtoEmbaladoInfo && (
+                <div className="mt-2 text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                  <p><strong>Nome:</strong> {produtoEmbaladoInfo.nome}</p>
+                  <p><strong>Código:</strong> {produtoEmbaladoInfo.codigo}</p>
+                  {produtoEmbaladoInfo.pesoLiquido && (
+                    <p><strong>Peso líquido:</strong> {produtoEmbaladoInfo.pesoLiquido} kg</p>
+                  )}
+                </div>
+              )}
             </div>
 
+            {/* Produto a Granel */}
             <div>
-              <label htmlFor="sku_agranel" className="block text-gray-700 mb-1 flex items-center gap-1">
+              <label
+                htmlFor="sku_agranel"
+                className="block text-gray-700 mb-1 flex items-center gap-1"
+              >
                 <FaBox className="text-[#6E2E1F]" /> Produto a Granel
               </label>
               <input
@@ -76,12 +128,25 @@ const response = await converterProduto({ skuEmbalado, skuAgranel, deposito, qua
                 placeholder="Ex: 203"
                 value={skuAgranel}
                 onChange={(e) => setSkuAgranel(e.target.value)}
+                onBlur={handleBlurAgranel}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8CC63F]"
               />
+              {produtoAgranelInfo && (
+                <div className="mt-2 text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                  <p><strong>Nome:</strong> {produtoAgranelInfo.nome}</p>
+                  <p><strong>Código:</strong> {produtoAgranelInfo.codigo}</p>
+                  {produtoAgranelInfo.pesoLiquido && (
+                    <p><strong>Peso líquido:</strong> {produtoAgranelInfo.pesoLiquido} kg</p>
+                  )}
+                </div>
+              )}
             </div>
 
+            {/* Depósito */}
             <div>
-              <label htmlFor="deposito" className="block text-gray-700 mb-1">Depósito</label>
+              <label htmlFor="deposito" className="block text-gray-700 mb-1">
+                Depósito
+              </label>
               <select
                 id="deposito"
                 value={deposito}
@@ -95,6 +160,7 @@ const response = await converterProduto({ skuEmbalado, skuAgranel, deposito, qua
               </select>
             </div>
 
+            {/* Botão */}
             <button
               type="submit"
               className="w-full bg-[#6E2E1F] text-white py-2 rounded-lg font-semibold hover:bg-[#541F16] transition"
@@ -113,7 +179,8 @@ const response = await converterProduto({ skuEmbalado, skuAgranel, deposito, qua
       </main>
 
       <footer className="bg-[#6E2E1F] text-white py-4 text-center">
-        Desenvolvido para integração com Bling API | <span className="font-bold">Lord Pets</span>
+        Desenvolvido para integração com Bling API |{" "}
+        <span className="font-bold">Lord Pets</span>
       </footer>
     </div>
   );
