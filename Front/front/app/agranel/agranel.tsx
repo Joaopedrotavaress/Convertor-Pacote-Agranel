@@ -16,7 +16,7 @@ const Agranel: React.FC = () => {
     setLoading(true);
     setResultado(null);
 
-    const response = await converterProduto({ skuEmbalado, skuAgranel, deposito });
+const response = await converterProduto({ skuEmbalado, skuAgranel, deposito, quantidade: 1 });
 
     if (response.success) setResultado(`Conversão realizada: ${response.mensagem}`);
     else setResultado(`Erro: ${response.error}`);
