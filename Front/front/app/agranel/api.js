@@ -1,19 +1,13 @@
 // api.js
-export const API_BASE_URL = "https://convertor-pacote-agranel.fly.dev"; // corrigido
+export const API_BASE_URL = "https://convertor-pacote-agranel.fly.dev";
 
-export async function converterProduto({ skuEmbalado, skuAgranel, deposito }) {
+export async function converterProduto({ skuEmbalado, skuAgranel, deposito, quantidade }) {
   try {
     const res = await fetch(`${API_BASE_URL}/conversao`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ skuEmbalado, quantidade, skuAgranel, deposito }), // agora inclui quantidade
+      body: JSON.stringify({ skuEmbalado, skuAgranel, deposito, quantidade }),
     });
-
-    if (!res.ok) {
-      // Se não for 200, retorna erro mais claro
-      const text = await res.text();
-      return { success: false, error: `Erro ${res.status}: ${text}` };
-    }
 
     const data = await res.json();
 
