@@ -12,7 +12,7 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 
 # Usando o caminho do disco persistente
-TOKEN_FILE = "/etc/secrets/token.json"
+TOKEN_FILE = "/etc/secrets/Token.json"
 
 # ----------------- Utilidades -----------------
 def save_token(token_data: dict):
