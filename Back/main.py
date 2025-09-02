@@ -20,12 +20,14 @@ app = FastAPI(title="Conversor Pacote → Agranel")
 # 🔹 Configuração de CORS
 origins = [
     "http://localhost:3000",                 # Front em dev
-    "https://seu-front-no-vercel.vercel.app" # Front em produção no Vercel
+    "https://convertor-pacote-agranel.vercel.app", # Front em produção no Vercel
+    "https://*.vercel.app"
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,7 +36,7 @@ app.add_middleware(
 # Modelo de dados para a requisição
 class ConversaoRequest(BaseModel):
     skuEmbalado: str
-    quantidade: int   # 🔹 Obrigatório (pacotes embalados a converter)
+    quantidade: int = 1  
     skuAgranel: str
     deposito: str
 
