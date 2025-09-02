@@ -42,15 +42,20 @@ class ConversaoRequest(BaseModel):
 
 def obter_token():
     """
-    Obtém um token de acesso válido, gerando um novo se necessário.
+    Obtém um token de acesso válido.
+    Se não existir token.json, tenta init_token(AUTH_CODE).
     """
     try:
         return get_valid_token()
-    except Exception:
-        AUTH_CODE = os.getenv("AUTH_CODE")
-        if not AUTH_CODE:
-            raise Exception("Nenhum token válido e AUTH_CODE não configurado.")
-        return init_token(AUTH_CODE)
+    except Exception as e:
+        if "Nenhum token encontrado" in str(e):
+            AUTH_CODE = os.getenv("AUTH_CODE")
+            if not AUTH_CODE:
+                raise Exception("Nenhum token válido e AUTH_CODE não configurado.")
+            return init_token(AUTH_CODE)
+        # Se o erro não for "nenhum token", propaga
+        raise
+
 
 @app.post("/conversao")
 def conversao(request: ConversaoRequest):
