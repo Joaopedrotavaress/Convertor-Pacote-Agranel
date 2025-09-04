@@ -12,12 +12,25 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 
 # Usando o caminho do disco persistente
-TOKEN_FILE = "/etc/secrets/token.json"
+TOKEN_FILE = "token.json"
 
 # ----------------- Utilidades -----------------
 def save_token(token_data: dict):
-    with open(TOKEN_FILE, "w") as f:
-        json.dump(token_data, f, indent=2, ensure_ascii=False)
+                try:
+                    with open(TOKEN_FILE, "w") as f:
+                        json.dump(token_data, f, indent=2, ensure_ascii=False)
+                    print(f"✅ Token salvo com sucesso em {TOKEN_FILE}")
+                except Exception as e:
+                    print(f"❌ ERRO ao salvar token em {TOKEN_FILE}: {e}")
+                    # Tente escrever um arquivo de teste para verificar permissões
+                    try:
+                        test_file_path = os.path.join(os.path.dirname(TOKEN_FILE), "test_write.txt")
+                        with open(test_file_path, "w") as tf:
+                            tf.write("Teste de escrita\n")
+                        print(f"✅ Teste de escrita bem-sucedido em {test_file_path}")
+                        os.remove(test_file_path) # Limpa o arquivo de teste
+                    except Exception as test_e:
+                        print(f"❌ ERRO no teste de escrita em {os.path.dirname(TOKEN_FILE)}: {test_e}")
 
 def load_token() -> dict | None:
     try:
